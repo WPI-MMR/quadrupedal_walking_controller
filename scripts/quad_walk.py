@@ -129,10 +129,39 @@ end = time.time() + args.length
 scorer = threading.Thread(target=episode_listener)
 scorer.start()
 
-# while time.time() < end:
-FLHR_HFE(joints, -np.pi / 4 - 0.132)
-FLHR_KFE(joints, np.pi / 2 + 0.132)
-env.step(to_action(joints))
+FLHR_KFE(joints, 1.2)
+while time.time() < end:
+  # Get ready to launch FR and HL
+  FLHR_HFE(joints, -0.917)
+  env.step(to_action(joints))
+  time.sleep(0.25)
+
+  # Move FR and HL foot up so it can step
+  FRHL_KFE(joints, 2)
+  env.step(to_action(joints))
+  time.sleep(0.1)
+
+  # Make the FR and HL Movement
+  FRHL_HFE(joints, -0.1)
+  FRHL_KFE(joints, 1.2)
+  env.step(to_action(joints))
+  time.sleep(0.1)
+
+  # Get ready to launch FL and HR
+  FRHL_HFE(joints, -0.917)
+  env.step(to_action(joints))
+  time.sleep(0.25)
+
+  # Move FL and HR foot up so it can step
+  FLHR_KFE(joints, 2)
+  env.step(to_action(joints))
+  time.sleep(0.1)
+
+  # Make the FL and HR Movement
+  FLHR_HFE(joints, -0.1)
+  FLHR_KFE(joints, 1.2)
+  env.step(to_action(joints))
+  time.sleep(0.1)
 
 
 scorer.join()
