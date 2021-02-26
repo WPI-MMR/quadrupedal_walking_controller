@@ -88,9 +88,7 @@ def episode_listener():
 scorer = threading.Thread(target=episode_listener)
 scorer.start()
 while time.time() < end:
-  # print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f}'.format(
-  #   flat_reward.compute(), height_reward.compute(), speed_reward.compute(), 
-  #   walk_reward.compute()))
+  # Gait goes here
   pass
 
 scorer.join()
