@@ -5,14 +5,18 @@ from gym_solo.envs import solo8v2vanilla_realtime
 from gym_solo.core import rewards
 from gym_solo import testing
 
+import matplotlib.pyplot as plt
 import numpy as np
 import argparse
+import threading
 import time
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--length', default=10, type=int,
                     help='how many seconds to run the simulation for.')
+parser.add_argument('-dt', '--reward_dt', default=.05, type=int, dest='dt',
+                    help='how often to sample the reward.')
 
 args = parser.parse_args()
 args.flat_reward_hard_margin = 0.05
@@ -66,11 +70,34 @@ joints = config.starting_joint_pos.copy()
 to_action = lambda d: [d[j] + config.starting_joint_pos[j] 
                         for j in env.joint_ordering]
 
-# end = time.time() + args.length
-# while time.time() < end:
-print(env.joint_ordering)
 env.step([0] * len(env.joint_ordering))
-while True:
-  print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f}'.format(
-    flat_reward.compute(), height_reward.compute(), speed_reward.compute(), 
-    walk_reward.compute()))
+end = time.time() + args.length
+
+epi_times, epi_rewards = [], []
+def episode_listener():
+  global epi_times
+  global epi_rewards
+  curr_timestep = 0.
+  while time.time() < end:
+    epi_times.append(curr_timestep)
+    epi_rewards.append(walk_reward.compute())
+    curr_timestep += args.dt
+    time.sleep(args.dt)
+  return epi_times, epi_rewards
+
+scorer = threading.Thread(target=episode_listener)
+scorer.start()
+while time.time() < end:
+  # print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f}'.format(
+  #   flat_reward.compute(), height_reward.compute(), speed_reward.compute(), 
+  #   walk_reward.compute()))
+  pass
+
+scorer.join()
+print(f'Score: {np.array(epi_rewards).mean()}')
+
+plt.plot(epi_times, epi_rewards)
+plt.title('Reward over Episode')
+plt.xlabel('Simulation Time (seconds)')
+plt.ylabel('Rewards')
+plt.show()
