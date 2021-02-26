@@ -59,6 +59,8 @@ parser.add_argument('-dt', '--reward_dt', default=.05, type=int, dest='dt',
                     help='how often to sample the reward.')
 
 args = parser.parse_args()
+
+# Reward configuration
 args.flat_reward_hard_margin = 0.05
 args.flat_reward_soft_margin = .5
 args.height_reward_target = 0.2
@@ -67,6 +69,16 @@ args.height_reward_soft_margin = 0.15
 args.speed_reward_target = .25
 args.speed_reward_hard_margin = 0.05
 args.speed_reward_soft_margin = 0.1
+
+# Trot configuration
+args.trot_hip_launch = -0.917
+args.trot_knee_launch = 1.6
+args.trot_launch_dur = 0.25
+args.trot_knee_clearance = 2
+args.trot_clearance_dur = 0.1
+args.trot_hip_step = -0.05
+args.trot_knee_step = 1.2
+args.trot_step_dur = 0.1
 
 
 config = solo8v2vanilla_realtime.RealtimeSolo8VanillaConfig()
@@ -132,40 +144,51 @@ scorer.start()
 FLHR_KFE(joints, 1.2)
 while time.time() < end:
   # Get ready to launch FR and HL
-  FLHR_HFE(joints, -0.917)
+  FLHR_HFE(joints, args.trot_hip_launch)
   env.step(to_action(joints))
-  time.sleep(0.25)
+  time.sleep(args.trot_launch_dur)
 
   # Move FR and HL foot up so it can step
-  FRHL_KFE(joints, 2)
+  FRHL_KFE(joints, args.trot_knee_clearance)
   env.step(to_action(joints))
-  time.sleep(0.1)
+  time.sleep(args.trot_clearance_dur)
 
   # Make the FR and HL Movement
-  FRHL_HFE(joints, -0.1)
-  FRHL_KFE(joints, 1.2)
+  FRHL_HFE(joints, args.trot_hip_step)
+  FRHL_KFE(joints, args.trot_knee_step)
   env.step(to_action(joints))
-  time.sleep(0.1)
+  time.sleep(args.trot_step_dur)
+
+  time.sleep(1)
 
   # Get ready to launch FL and HR
-  FRHL_HFE(joints, -0.917)
+  FRHL_HFE(joints, args.trot_hip_launch)
+  FLHR_KFE(joints, args.trot_knee_launch)
   env.step(to_action(joints))
-  time.sleep(0.25)
+  time.sleep(args.trot_launch_dur)
+
+  time.sleep(1)
 
   # Move FL and HR foot up so it can step
-  FLHR_KFE(joints, 2)
+  FLHR_KFE(joints, args.trot_knee_clearance)
   env.step(to_action(joints))
-  time.sleep(0.1)
+  time.sleep(args.trot_clearance_dur)
+
+  time.sleep(1)
 
   # Make the FL and HR Movement
-  FLHR_HFE(joints, -0.1)
-  FLHR_KFE(joints, 1.2)
+  FLHR_HFE(joints, args.trot_hip_step)
+  FLHR_KFE(joints, args.trot_knee_step)
   env.step(to_action(joints))
-  time.sleep(0.1)
+  time.sleep(args.trot_step_dur)
+
+  time.sleep(1)
 
 
 scorer.join()
+scores = np.array(epi_rewards)
 print(f'Average Score: {np.array(epi_rewards).mean()}')
+print(f'Cum Score: {np.array(epi_rewards).sum()}')
 
 plt.plot(epi_times, epi_rewards)
 plt.title('Reward over Episode')
