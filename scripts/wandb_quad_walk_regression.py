@@ -11,7 +11,7 @@ import time
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('length', default=10, 
+parser.add_argument('-l', '--length', default=10, type=int,
                     help='how many seconds to run the simulation for.')
 
 args = parser.parse_args()
@@ -43,7 +43,8 @@ joints = config.starting_joint_pos.copy()
 to_action = lambda d: [d[j] + config.starting_joint_pos[j] 
                         for j in env.joint_ordering]
 
-while True:
+end = time.time() + args.length
+while time.time() < end:
   pos = float(input('Which position do you want to set all the joints to?: '))
   if pos == 69:
     env.reset()
