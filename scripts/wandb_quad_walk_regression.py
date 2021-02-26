@@ -2,7 +2,7 @@ import gym
 import gym_solo
 
 from gym_solo.envs import solo8v2vanilla_realtime
-from gym_solo.core import obs
+from gym_solo.core import rewards
 from gym_solo import testing
 
 import numpy as np
@@ -15,6 +15,14 @@ parser.add_argument('-l', '--length', default=10, type=int,
                     help='how many seconds to run the simulation for.')
 
 args = parser.parse_args()
+args.flat_reward_hard_margin = 0.05
+args.flat_reward_soft_margin = .5
+args.height_reward_target = 0.2
+args.height_reward_hard_margin = 0.01
+args.height_reward_soft_margin = 0.15
+args.speed_reward_target = .25
+args.speed_reward_hard_margin = 0.05
+args.speed_reward_soft_margin = 0.1
 
 
 config = solo8v2vanilla_realtime.RealtimeSolo8VanillaConfig()
@@ -39,17 +47,32 @@ config.starting_joint_pos = {
 env = gym.make('solo8vanilla-realtime-v0', config=config)
 env.obs_factory.register_observation(testing.CompliantObs(env.robot))
 
+flat_reward = rewards.FlatTorsoReward(
+  env.robot, args.flat_reward_hard_margin, args.flat_reward_soft_margin)
+height_reward = rewards.TorsoHeightReward(
+  env.robot, args.height_reward_target, args.height_reward_hard_margin,
+  args.height_reward_soft_margin)
+speed_reward = rewards.HorizontalMoveSpeedReward(
+  env.robot, args.speed_reward_target, hard_margin=args.speed_reward_hard_margin,
+  soft_margin=args.speed_reward_soft_margin)
+
+walk_reward = rewards.AdditiveReward()
+walk_reward.client = env.client
+walk_reward.add_term(1, flat_reward)
+walk_reward.add_term(1, height_reward)
+walk_reward.add_term(1, speed_reward)
+
 joints = config.starting_joint_pos.copy()
 to_action = lambda d: [d[j] + config.starting_joint_pos[j] 
                         for j in env.joint_ordering]
 
-end = time.time() + args.length
-while time.time() < end:
-  pos = float(input('Which position do you want to set all the joints to?: '))
-  if pos == 69:
-    env.reset()
-    continue
-
-  for j in joints.keys():
-    joints[j] = pos
-  env.step(to_action(joints))
+# end = time.time() + args.length
+# while time.time() < end:
+print(env.joint_ordering)
+env.step([0] * len(env.joint_ordering))
+while True:
+  (vx, vy, _), _ = env.client.getBaseVelocity(env.robot)
+  speed = np.sqrt(vx ** 2 + vy ** 2)
+  print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f} zoom: {:.4f}'.format(
+    flat_reward.compute(), height_reward.compute(), speed_reward.compute(), 
+    walk_reward.compute(), speed))
