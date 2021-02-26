@@ -13,6 +13,7 @@ import argparse
 import math
 import threading
 import time
+import wandb
 
 
 epi_times, epi_rewards = [], []
@@ -58,6 +59,10 @@ parser.add_argument('-l', '--length', default=10, type=int,
 parser.add_argument('-dt', '--reward_dt', default=.05, type=int, dest='dt',
                     help='how often to sample the reward.')
 
+args, unknown = parser.parse_known_args()
+for arg in unknown:
+  if arg.startswith(("-", "--")):
+      parser.add_argument(arg.split('=')[0])
 args = parser.parse_args()
 
 # Reward configuration
@@ -71,14 +76,22 @@ args.speed_reward_hard_margin = 0.05
 args.speed_reward_soft_margin = 0.1
 
 # Trot configuration
-args.trot_hip_launch = -0.917
-args.trot_knee_launch = 1.6
+args.trot_hip_launch = -0.8
+args.trot_knee_launch = 1.4
 args.trot_launch_dur = 0.25
 args.trot_knee_clearance = 2
 args.trot_clearance_dur = 0.1
 args.trot_hip_step = -0.05
-args.trot_knee_step = 1.2
+args.trot_knee_step = 1.5
 args.trot_step_dur = 0.1
+
+
+wandb.init(
+  project='quadrupedal-walking',
+  entity='wpi-mmr',
+  config=args,
+  tags=[],
+)
 
 
 config = solo8v2vanilla_realtime.RealtimeSolo8VanillaConfig()
@@ -141,17 +154,13 @@ end = time.time() + args.length
 scorer = threading.Thread(target=episode_listener)
 scorer.start()
 
-FLHR_KFE(joints, 1.2)
 while time.time() < end:
   # Get ready to launch FR and HL
   FLHR_HFE(joints, args.trot_hip_launch)
-  env.step(to_action(joints))
-  time.sleep(args.trot_launch_dur)
-
-  # Move FR and HL foot up so it can step
+  FLHR_KFE(joints, args.trot_knee_launch)
   FRHL_KFE(joints, args.trot_knee_clearance)
   env.step(to_action(joints))
-  time.sleep(args.trot_clearance_dur)
+  time.sleep(args.trot_launch_dur)
 
   # Make the FR and HL Movement
   FRHL_HFE(joints, args.trot_hip_step)
@@ -159,22 +168,12 @@ while time.time() < end:
   env.step(to_action(joints))
   time.sleep(args.trot_step_dur)
 
-  time.sleep(1)
-
   # Get ready to launch FL and HR
   FRHL_HFE(joints, args.trot_hip_launch)
-  FLHR_KFE(joints, args.trot_knee_launch)
-  env.step(to_action(joints))
-  time.sleep(args.trot_launch_dur)
-
-  time.sleep(1)
-
-  # Move FL and HR foot up so it can step
+  FRHL_KFE(joints, args.trot_knee_launch)
   FLHR_KFE(joints, args.trot_knee_clearance)
   env.step(to_action(joints))
-  time.sleep(args.trot_clearance_dur)
-
-  time.sleep(1)
+  time.sleep(args.trot_launch_dur)
 
   # Make the FL and HR Movement
   FLHR_HFE(joints, args.trot_hip_step)
@@ -182,10 +181,9 @@ while time.time() < end:
   env.step(to_action(joints))
   time.sleep(args.trot_step_dur)
 
-  time.sleep(1)
-
-
 scorer.join()
+env.close()
+
 scores = np.array(epi_rewards)
 print(f'Average Score: {np.array(epi_rewards).mean()}')
 print(f'Cum Score: {np.array(epi_rewards).sum()}')
@@ -194,4 +192,9 @@ plt.plot(epi_times, epi_rewards)
 plt.title('Reward over Episode')
 plt.xlabel('Simulation Time (seconds)')
 plt.ylabel('Rewards')
-plt.show()
+
+wandb.log({
+  'mean_reward': scores.mean(),
+  'cum_reward': scores.sum(),
+  'rewards_vs_time': wandb.Image(plt)
+})
