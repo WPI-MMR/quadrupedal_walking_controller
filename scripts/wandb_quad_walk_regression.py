@@ -71,8 +71,6 @@ to_action = lambda d: [d[j] + config.starting_joint_pos[j]
 print(env.joint_ordering)
 env.step([0] * len(env.joint_ordering))
 while True:
-  (vx, vy, _), _ = env.client.getBaseVelocity(env.robot)
-  speed = np.sqrt(vx ** 2 + vy ** 2)
-  print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f} zoom: {:.4f}'.format(
+  print('flat: {:.4f} height: {:.4f} speed: {:.4f} overall: {:.4f}'.format(
     flat_reward.compute(), height_reward.compute(), speed_reward.compute(), 
-    walk_reward.compute(), speed))
+    walk_reward.compute()))
