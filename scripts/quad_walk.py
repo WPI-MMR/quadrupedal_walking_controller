@@ -32,6 +32,26 @@ def episode_listener():
   return epi_times, epi_rewards
 
 
+def FLHR_HFE(joints, value):
+  joints['FL_HFE'] = -value
+  joints['HR_HFE'] = value
+
+
+def FLHR_KFE(joints, value):
+  joints['FL_KFE'] = value
+  joints['HR_KFE'] = -value
+
+
+def FRHL_HFE(joints, value):
+  joints['FR_HFE'] = value
+  joints['HL_HFE'] = -value
+
+
+def FRHL_KFE(joints, value):
+  joints['FR_KFE'] = -value
+  joints['HL_KFE'] = -value
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--length', default=10, type=int,
                     help='how many seconds to run the simulation for.')
@@ -109,11 +129,10 @@ end = time.time() + args.length
 scorer = threading.Thread(target=episode_listener)
 scorer.start()
 
-while time.time() < end:
-# joints['FR_HFE'] += -0.132
-# joints['FR_KFE'] += 0.132
-# env.step(to_action(joints))
-  pass
+# while time.time() < end:
+FLHR_HFE(joints, -np.pi / 4 - 0.132)
+FLHR_KFE(joints, np.pi / 2 + 0.132)
+env.step(to_action(joints))
 
 
 scorer.join()
