@@ -1,0 +1,6 @@
+gym
+git+https://github.com/WPI-MMR/gym_solo.git
+tqdm
+matplotlib
+numpy 
+wandb
