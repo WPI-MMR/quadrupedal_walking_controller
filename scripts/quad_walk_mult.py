@@ -153,7 +153,6 @@ joints = {
   'HR_ANKLE': 0
 }
 env.step(to_action(joints))
-time.sleep(2)
 
 end = time.time() + args.length
 scorer = threading.Thread(target=episode_listener)
