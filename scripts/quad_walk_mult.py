@@ -42,7 +42,7 @@ def episode_listener():
 
 
 def FLHR_HFE(joints, value):
-  joints['FL_HFE'] = -value
+  joints['FL_HFE'] = 1.1 * -value
   joints['HR_HFE'] = value
 
 
@@ -52,14 +52,14 @@ def FLHR_KFE(joints, value):
 
 
 def FRHL_HFE(joints, value):
-  joints['FR_HFE'] = value
+  joints['FR_HFE'] = 1.1 * value
   joints['HL_HFE'] = -value
 
 
 def FRHL_KFE(joints, value):
   joints['FR_KFE'] = -value
   joints['HL_KFE'] = -value
-
+  
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', '--length', default=10, type=int,
@@ -77,10 +77,10 @@ args = parser.parse_args()
 args.flat_reward_hard_margin = 0
 args.flat_reward_soft_margin = 0.3
 args.height_reward_target = 0.2
-args.height_reward_hard_margin = 0.01
+args.height_reward_hard_margin = 0.005
 args.height_reward_soft_margin = 0.15
 args.speed_reward_target = .25
-args.speed_reward_hard_margin = 0.05
+args.speed_reward_hard_margin = 0
 args.speed_reward_soft_margin = 0.1
 
 # Trot configuration
@@ -94,12 +94,12 @@ args.trot_knee_step = 1.5
 args.trot_step_dur = 0.1
 
 
-wandb.init(
-  project='quadrupedal-walking',
-  entity='wpi-mmr',
-  config=args,
-  tags=['multiplicative_reward'],
-)
+# wandb.init(
+#   project='quadrupedal-walking',
+#   entity='wpi-mmr',
+#   config=args,
+#   tags=['multiplicative_reward'],
+# )
 
 
 config = solo8v2vanilla_realtime.RealtimeSolo8VanillaConfig()
@@ -153,7 +153,7 @@ joints = {
   'HR_ANKLE': 0
 }
 env.step(to_action(joints))
-time.sleep(0.25)
+time.sleep(2)
 
 end = time.time() + args.length
 scorer = threading.Thread(target=episode_listener)
@@ -161,28 +161,28 @@ scorer.start()
 
 while time.time() < end:
   # Get ready to launch FR and HL
-  FLHR_HFE(joints, args.trot_hip_launch)
-  FLHR_KFE(joints, args.trot_knee_launch)
-  FRHL_KFE(joints, args.trot_knee_clearance)
+  FLHR_HFE(joints, -1)
+  FLHR_KFE(joints, 1.2)
+  FRHL_KFE(joints, 1.8)
   env.step(to_action(joints))
   time.sleep(args.trot_launch_dur)
 
   # Make the FR and HL Movement
-  FRHL_HFE(joints, args.trot_hip_step)
-  FRHL_KFE(joints, args.trot_knee_step)
+  FRHL_HFE(joints, -.4)
+  FRHL_KFE(joints, 1.5)
   env.step(to_action(joints))
   time.sleep(args.trot_step_dur)
 
   # Get ready to launch FL and HR
-  FRHL_HFE(joints, args.trot_hip_launch)
-  FRHL_KFE(joints, args.trot_knee_launch)
-  FLHR_KFE(joints, args.trot_knee_clearance)
+  FRHL_HFE(joints, -1)
+  FRHL_KFE(joints, 1.2)
+  FLHR_KFE(joints, 1.8)
   env.step(to_action(joints))
   time.sleep(args.trot_launch_dur)
 
   # Make the FL and HR Movement
-  FLHR_HFE(joints, args.trot_hip_step)
-  FLHR_KFE(joints, args.trot_knee_step)
+  FLHR_HFE(joints, -.4)
+  FLHR_KFE(joints, 1.5)
   env.step(to_action(joints))
   time.sleep(args.trot_step_dur)
 
