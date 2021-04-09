@@ -21,8 +21,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'trot = quad_gaits.trot:main'
-            'trot = quad_gaits.trot:main'
+            'trot = quad_gaits.trot:trot'
+            'calibrate = quad_gaits.trot:calibrate'
         ],
     },
 )
