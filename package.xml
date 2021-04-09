@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>quadrupedal_walking_controller</name>
+  <version>0.0.0</version>
+  <description>Basic set of controllers for quadrupedal walking</description>
+  <license>MIT</license>
+  <url type="website">https://github.com/WPI-MMR/trajectory_executor</url>
+
+  <maintainer email="ageuredjian@wpi.edu">Andrew Euredjian</maintainer>
+  <maintainer email="agupta4@wpi.edu">Ankur Gupta</maintainer>
+  <maintainer email="rmahajan@wpi.edu">Revant Mahajan</maintainer>
+  <maintainer email="damuzila@wpi.edu">Dante Muzila</maintainer>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
