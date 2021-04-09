@@ -13,7 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'numpy'],
     zip_safe=True,
     maintainer='Andrew Euredjian, Ankur Gupta, Revant Mahajan',
     maintainer_email='ageuredjian@wpi.edu, agupta4@wpi.edu, rmahajan@wpi.edu',
@@ -21,6 +21,7 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
+            'trot = quad_gaits.trot:main'
             'trot = quad_gaits.trot:main'
         ],
     },
