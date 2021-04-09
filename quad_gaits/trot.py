@@ -133,3 +133,39 @@ def trot(args=None):
   
   trot.destroy_node()
   rclpy.shutdown()
+
+
+def calibrate(args=None):
+  """Offer the robotist an interactive terminal to manually set the joint
+  values."""
+
+  rclpy.init(args=args)
+  trot = Trot()
+  
+  trot.joints = {
+    'FL_HFE': np.pi / 4,
+    'FL_KFE': np.pi / 2,
+    'FL_ANKLE': 0,
+    'FR_HFE': -np.pi / 4,
+    'FR_KFE': -np.pi / 2,
+    'FR_ANKLE': 0,
+    'HL_HFE': np.pi / 4,
+    'HL_KFE': -np.pi / 2,
+    'HL_ANKLE': 0,
+    'HR_HFE': -np.pi / 4,
+    'HR_KFE': -np.pi / 2,
+    'HR_ANKLE': 0,
+  }
+  trot.send_angles()
+
+  while True:
+    try:
+      key, _, value = input('Enter [JointID] [Value]: ').partition(' ')
+      trot.joints[key] = float(value)
+      trot.send_angles()
+
+    except KeyboardInterrupt:
+      break
+
+  trot.destroy_node()
+  rclpy.shutdown()
